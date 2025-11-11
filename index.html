@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>251111</title>
+  </head>
+  <body>
+    <div id="app">
+      <h1>🏔️ 히말라야 트래킹 추천 챗봇 🎒</h1>
+      <div id="mode-badge" class="hint"></div>
+      <div id="chat-container">
+        <div id="chat-messages" aria-live="polite"></div>
+        <form id="chat-form">
+          <div class="inputs">
+            <input id="user-input" type="text" placeholder="💬 기간(예: 5일), 난이도(예: 쉬움/보통/어려움) 또는 자유롭게 질문하세요" autocomplete="off" />
+            <button id="send-btn" type="submit">📤 전송</button>
+          </div>
+          <div class="quick-filters">
+            <span>⚡ 빠른 선택:</span>
+            <div class="chips">
+              <button type="button" class="chip" data-text="3-5일 쉬움 코스 추천해줘">🟢 3-5일 · 쉬움</button>
+              <button type="button" class="chip" data-text="6-10일 보통 난이도 코스 추천해줘">🟡 6-10일 · 보통</button>
+              <button type="button" class="chip" data-text="11일 이상 어려움 난이도 코스 추천해줘">🔴 11일+ · 어려움</button>
+            </div>
+          </div>
+        </form>
+        <p class="hint">환경변수에서 API Key를 읽습니다. Netlify/Vite에서는 <code>VITE_OPENAI_API_KEY</code> 또는 <code>VITE_GPT_API_KEY</code>로 설정하세요.</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
