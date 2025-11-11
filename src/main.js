@@ -1,7 +1,3 @@
 import './style.css'
-import { Chatbot } from './chatbot.js'
-
-// DOM이 로드된 후 챗봇 초기화
-document.addEventListener('DOMContentLoaded', () => {
-  new Chatbot()
-})
+// 챗봇은 chatbot.js에서 자동으로 초기화됩니다
+import './chatbot.js'

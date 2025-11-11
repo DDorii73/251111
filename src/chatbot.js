@@ -247,3 +247,16 @@ export class Chatbot {
 // 유틸리티 함수들 export
 export { parseQuery, localRecommend, requestRecommendation, getSystemPrompt, USE_LOCAL_RECO, API_KEY_VAR }
 
+// 챗봇 자동 초기화
+// DOM이 로드된 후 자동으로 챗봇을 초기화합니다
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      new Chatbot()
+    })
+  } else {
+    // DOM이 이미 로드된 경우 즉시 초기화
+    new Chatbot()
+  }
+}
+
