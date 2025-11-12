@@ -8,8 +8,8 @@ const MODEL = 'gpt-4o-mini'
 
 const USE_LOCAL_RECO = !OPENAI_API_KEY
 
-// 시스템 프롬프트 생성
-function getSystemPrompt() {
+// 기본 시스템 프롬프트 생성
+function getDefaultSystemPrompt() {
   return [
     '당신은 히말라야 트래킹 전문 여행 플래너입니다.',
     '사용자가 기간(일수)과 난이도(쉬움/보통/어려움)를 말하면,',
@@ -23,6 +23,12 @@ function getSystemPrompt() {
     '필요 시 대안/단축 코스도 제안하세요.',
     '예시 코스: 푼힐, 랑탕, 마르디 히말, 안나푸르나 서킷, 에베레스트 베이스캠프, 고쿄 호수, 마나슬루, 어퍼 무스탕, 칸첸중가 등.'
   ].join(' ')
+}
+
+// 시스템 프롬프트 가져오기 (localStorage에서 불러오거나 기본값 사용)
+function getSystemPrompt() {
+  const savedPrompt = localStorage.getItem('systemPrompt')
+  return savedPrompt || getDefaultSystemPrompt()
 }
 
 // 쿼리에서 기간과 난이도 파싱
@@ -101,14 +107,13 @@ function localRecommend(query) {
 }
 
 // OpenAI API를 통한 추천 요청
-async function requestRecommendation(query) {
+async function requestRecommendation(messages, query) {
   if (USE_LOCAL_RECO) {
     return localRecommend(query)
   }
-  const messages = [
-    { role: 'system', content: getSystemPrompt() },
-    { role: 'user', content: query }
-  ]
+  
+  // messages 배열을 사용 (system 메시지는 이미 포함되어 있음)
+  // user 메시지는 handleSubmit에서 추가되므로 여기서는 그대로 사용
   const res = await fetch(OPENAI_API_URL, {
     method: 'POST',
     headers: {
@@ -117,7 +122,7 @@ async function requestRecommendation(query) {
     },
     body: JSON.stringify({
       model: MODEL,
-      messages,
+      messages: messages, // 전체 대화 히스토리 사용
       temperature: 0.7
     })
   })
@@ -141,6 +146,24 @@ export class Chatbot {
     this.chips = options.chips || document.querySelectorAll('.chip')
     this.modeBadge = options.modeBadge || document.getElementById('mode-badge')
     
+    // 프롬프트 편집 관련 요소
+    this.promptEditor = document.getElementById('prompt-editor')
+    this.promptInput = document.getElementById('system-prompt-input')
+    this.promptEditorContent = document.getElementById('prompt-editor-content')
+    this.togglePromptEditor = document.getElementById('toggle-prompt-editor')
+    this.savePromptBtn = document.getElementById('save-prompt-btn')
+    this.resetPromptBtn = document.getElementById('reset-prompt-btn')
+    this.clearChatBtn = document.getElementById('clear-chat-btn')
+    
+    // 대화 히스토리를 관리하는 messages 배열 초기화
+    // system 메시지로 시작
+    this.messages = [
+      {
+        role: 'system',
+        content: getSystemPrompt()
+      }
+    ]
+    
     this.init()
   }
 
@@ -163,12 +186,140 @@ export class Chatbot {
       ? '🔧 데모 모드(로컬 추천 사용): API 키 미설정'
       : `🤖 실시간 GPT 모드: ${API_KEY_VAR} 사용 중`
 
-    // 초기 환영 메시지
-    this.appendMessage('assistant', '👋 안녕하세요! 🏔️ 히말라야 트래킹 코스 추천 봇입니다.\n\n기간과 난이도를 알려주시면 맞춤형 트래킹 코스를 추천해 드릴게요.\n\n예시: "6-8일 보통 난이도" 또는 아래 빠른 선택 버튼을 사용해보세요! ⬇️')
+    // 프롬프트 편집기 초기화
+    this.initPromptEditor()
+
+    // 초기 환영 메시지 (화면에만 표시, messages 배열에는 추가하지 않음)
+    this.showWelcomeMessage()
+  }
+  
+  // 프롬프트 편집기 초기화
+  initPromptEditor() {
+    if (!this.promptInput || !this.promptEditor) return
+    
+    // 저장된 프롬프트가 있으면 불러오기, 없으면 기본값을 placeholder로 표시
+    const savedPrompt = localStorage.getItem('systemPrompt')
+    const defaultPrompt = getDefaultSystemPrompt()
+    
+    if (savedPrompt) {
+      this.promptInput.value = savedPrompt
+    } else {
+      this.promptInput.placeholder = defaultPrompt
+    }
+    
+    // 프롬프트 편집기 접기/펼치기
+    if (this.togglePromptEditor) {
+      this.togglePromptEditor.addEventListener('click', () => {
+        const isHidden = this.promptEditorContent.style.display === 'none'
+        this.promptEditorContent.style.display = isHidden ? 'block' : 'none'
+        this.togglePromptEditor.textContent = isHidden ? '접기' : '펼치기'
+      })
+    }
+    
+    // 프롬프트 저장
+    if (this.savePromptBtn) {
+      this.savePromptBtn.addEventListener('click', () => {
+        // textarea 값이 비어있으면 placeholder 값 사용 (기본 프롬프트)
+        const promptText = this.promptInput.value.trim() || this.promptInput.placeholder.trim()
+        this.updateSystemPrompt(promptText)
+      })
+    }
+    
+    // 기본값으로 리셋
+    if (this.resetPromptBtn) {
+      this.resetPromptBtn.addEventListener('click', () => {
+        if (confirm('기본 프롬프트로 리셋하시겠습니까?')) {
+          const defaultPromptText = getDefaultSystemPrompt()
+          // 기본 프롬프트로 업데이트 (localStorage에도 저장)
+          this.updateSystemPrompt(defaultPromptText)
+          // textarea에 표시
+          this.promptInput.value = defaultPromptText
+          this.promptInput.placeholder = ''
+        }
+      })
+    }
+    
+    // 대화 초기화
+    if (this.clearChatBtn) {
+      this.clearChatBtn.addEventListener('click', () => {
+        this.clearChat()
+      })
+    }
+  }
+  
+  // 시스템 프롬프트 업데이트
+  updateSystemPrompt(newPrompt) {
+    if (!newPrompt || newPrompt.trim() === '') {
+      alert('프롬프트를 입력해주세요.')
+      return
+    }
+    
+    const trimmedPrompt = newPrompt.trim()
+    
+    // messages 배열의 system 메시지 업데이트
+    this.messages[0] = {
+      role: 'system',
+      content: trimmedPrompt
+    }
+    
+    // localStorage에 저장
+    localStorage.setItem('systemPrompt', trimmedPrompt)
+    
+    // textarea에 저장된 값 표시
+    if (this.promptInput) {
+      this.promptInput.value = trimmedPrompt
+      this.promptInput.placeholder = ''
+    }
+    
+    // 성공 메시지
+    alert('✅ 프롬프트가 저장되었습니다. 다음 대화부터 새로운 프롬프트가 적용됩니다.')
+  }
+  
+  // 대화 초기화 (프롬프트는 유지)
+  clearChat() {
+    if (confirm('대화 내역을 모두 삭제하시겠습니까? 프롬프트는 유지됩니다.')) {
+      // 화면의 메시지 제거 (환영 메시지 제외)
+      const messages = this.chatMessages.querySelectorAll('.msg:not(.loading-msg)')
+      messages.forEach(msg => msg.remove())
+      
+      // messages 배열 초기화 (system 메시지만 유지)
+      this.messages = [
+        {
+          role: 'system',
+          content: getSystemPrompt()
+        }
+      ]
+      
+      // 환영 메시지 다시 표시
+      this.showWelcomeMessage()
+      
+      alert('✅ 대화가 초기화되었습니다.')
+    }
+  }
+  
+  // 초기 환영 메시지 표시 (messages 배열에 추가하지 않음)
+  showWelcomeMessage() {
+    const wrapper = document.createElement('div')
+    wrapper.className = 'msg assistant'
+    const bubble = document.createElement('div')
+    bubble.className = 'bubble'
+    bubble.textContent = '👋 안녕하세요! 🏔️ 히말라야 트래킹 코스 추천 봇입니다.\n\n기간과 난이도를 알려주시면 맞춤형 트래킹 코스를 추천해 드릴게요.\n\n예시: "6-8일 보통 난이도" 또는 아래 빠른 선택 버튼을 사용해보세요! ⬇️'
+    wrapper.appendChild(bubble)
+    this.chatMessages.appendChild(wrapper)
+    this.chatMessages.scrollTop = this.chatMessages.scrollHeight
   }
 
-  // 메시지 추가
+  // 메시지 추가 (화면에 표시하고 messages 배열에도 추가)
   appendMessage(role, text, isHTML = false) {
+    // messages 배열에 추가 (system 메시지는 제외 - 이미 초기화 시 추가됨)
+    if (role !== 'system') {
+      this.messages.push({
+        role: role,
+        content: text
+      })
+    }
+    
+    // 화면에 메시지 표시
     const wrapper = document.createElement('div')
     wrapper.className = `msg ${role}`
     const bubble = document.createElement('div')
@@ -220,6 +371,8 @@ export class Chatbot {
   handleSubmit(text) {
     const query = (text ?? this.userInput.value).trim()
     if (!query) return
+    
+    // user 메시지를 화면에 표시하고 messages 배열에 추가
     this.appendMessage('user', query)
     this.userInput.value = ''
     this.setLoading(true)
@@ -227,13 +380,16 @@ export class Chatbot {
     // 로딩 후 응답 처리 (로컬 추천은 약간의 딜레이를 주어 자연스럽게)
     const delay = USE_LOCAL_RECO ? 800 : 0
     setTimeout(() => {
-      requestRecommendation(query)
+      // messages 배열을 전달하여 대화 히스토리 유지
+      requestRecommendation(this.messages, query)
         .then((answer) => {
           this.hideLoading()
+          // assistant 메시지를 화면에 표시하고 messages 배열에 추가
           this.appendMessage('assistant', answer)
         })
         .catch((err) => {
           this.hideLoading()
+          // 오류 메시지는 messages 배열에 추가하지 않음 (선택적)
           this.appendMessage('assistant', `❌ 오류: ${err.message}\n\n다시 시도해주시거나 다른 질문을 해주세요.`)
         })
         .finally(() => {
@@ -242,10 +398,25 @@ export class Chatbot {
         })
     }, delay)
   }
+  
+  // messages 배열 초기화 (필요시 사용)
+  resetMessages() {
+    this.messages = [
+      {
+        role: 'system',
+        content: getSystemPrompt()
+      }
+    ]
+  }
+  
+  // messages 배열 조회 (디버깅 또는 로깅용)
+  getMessages() {
+    return this.messages
+  }
 }
 
 // 유틸리티 함수들 export
-export { parseQuery, localRecommend, requestRecommendation, getSystemPrompt, USE_LOCAL_RECO, API_KEY_VAR }
+export { parseQuery, localRecommend, requestRecommendation, getSystemPrompt, getDefaultSystemPrompt, USE_LOCAL_RECO, API_KEY_VAR }
 
 // 챗봇 자동 초기화
 // DOM이 로드된 후 자동으로 챗봇을 초기화합니다

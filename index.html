@@ -10,6 +10,31 @@
     <div id="app">
       <h1>🏔️ 히말라야 트래킹 추천 챗봇 🎒</h1>
       <div id="mode-badge" class="hint"></div>
+      
+      <!-- 개발자용 프롬프트 편집 영역 -->
+      <div id="prompt-editor" class="prompt-editor">
+        <div class="prompt-header">
+          <h3>🔧 개발자용 프롬프트 테스트</h3>
+          <button type="button" id="toggle-prompt-editor" class="toggle-btn">접기</button>
+        </div>
+        <div id="prompt-editor-content" class="prompt-editor-content">
+          <div class="prompt-input-wrapper">
+            <label for="system-prompt-input">시스템 프롬프트:</label>
+            <textarea 
+              id="system-prompt-input" 
+              class="prompt-textarea" 
+              rows="8" 
+              placeholder="프롬프트를 입력하세요..."
+            ></textarea>
+            <div class="prompt-actions">
+              <button type="button" id="save-prompt-btn" class="action-btn primary">💾 프롬프트 저장</button>
+              <button type="button" id="reset-prompt-btn" class="action-btn secondary">↩️ 기본값으로 리셋</button>
+              <button type="button" id="clear-chat-btn" class="action-btn warning">🗑️ 대화 초기화</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div id="chat-container">
         <div id="chat-messages" aria-live="polite"></div>
         <form id="chat-form">

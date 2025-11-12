@@ -121,8 +121,143 @@ button:focus-visible {
   color: inherit;
 }
 
+/* 프롬프트 편집기 스타일 */
+.prompt-editor {
+  margin: 1.5rem auto 0;
+  max-width: 780px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.prompt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(100, 108, 255, 0.1);
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.prompt-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #646cff;
+}
+
+.toggle-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background: rgba(100, 108, 255, 0.2);
+  border-color: #646cff;
+}
+
+.prompt-editor-content {
+  padding: 1rem;
+}
+
+.prompt-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.prompt-input-wrapper label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.prompt-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.87);
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.prompt-textarea:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.prompt-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  opacity: 0.7;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.action-btn.primary {
+  background: #646cff;
+  color: white;
+  border-color: #646cff;
+}
+
+.action-btn.primary:hover {
+  background: #535bf2;
+  border-color: #535bf2;
+  transform: translateY(-1px);
+}
+
+.action-btn.secondary {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.87);
+  border-color: #3a3a3a;
+}
+
+.action-btn.secondary:hover {
+  background: rgba(100, 108, 255, 0.1);
+  border-color: #646cff;
+}
+
+.action-btn.warning {
+  background: transparent;
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+.action-btn.warning:hover {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: #ff5252;
+}
+
 #chat-container {
-  margin: 2rem auto 0;
+  margin: 1.5rem auto 0;
   max-width: 780px;
   width: 100%;
   text-align: left;
